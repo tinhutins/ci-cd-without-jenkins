@@ -1,0 +1,106 @@
+name: CI/CD Workflow
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  REPOSITORY_PATH: 'hutinskit'
+  IMAGE_NAME: 'python-test-app'
+  TAG: '1.0.135'
+  ARGO_TEST_BRANCH: 'tino-test'
+  ARGO_PROD_BRANCH: 'tino-prod'
+
+jobs:
+  build_image:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Build Docker image
+      run: |
+        echo "Building the docker image ${{ env.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}..."
+        docker build -t ${{ env.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} .
+
+  test_image:
+    runs-on: ubuntu-latest
+
+    needs: build_image
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Test Docker image
+      run: |
+        echo "Testing if the docker image was successfully created in GitHub Actions"
+        DOES_EXIST_LOCAL=$(docker images ${{ env.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} | wc -l)
+        if [ $DOES_EXIST_LOCAL -gt 1 ] ; then
+          echo "true" > check_image_creation.txt
+        fi
+
+      # Upload the check_image_creation.txt file as an artifact
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: check_image_creation
+        path: check_image_creation.txt
+
+  deploy_harbor:
+    runs-on: ubuntu-latest
+
+    needs: test_image
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Deploy to Harbor
+      if: success('test_image')
+      run: |
+        if grep -q true "check_image_creation.txt"; then
+          echo "Deploying the docker image to Harbor..."
+          docker login -u ${{ secrets.HARBOR_CREDENTIALS_USR }} -p ${{ secrets.HARBOR_CREDENTIALS_PSW }} 
+          docker push ${{ env.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+        fi
+
+  deploy_k8s:
+    runs-on: ubuntu-latest
+
+    needs: test_image
+
+    strategy:
+      matrix:
+        deploy_env: ['test', 'prod']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Deploy to Kubernetes
+      if: success('test_image')
+      run: |
+        apk update && apk add git && apk add kustomize
+
+        if [ "${{ matrix.deploy_env }}" == "test" ]; then
+          branch="${{ env.ARGO_TEST_BRANCH }}"
+          environment="test Kubernetes"
+        elif [ "${{ matrix.deploy_env }}" == "prod" ]; then
+          branch="${{ env.ARGO_PROD_BRANCH }}"
+          environment="production Kubernetes"
+        fi
+
+        if grep -q true "check_image_creation.txt"; then
+          echo "Deploying to $environment..."
+          git clone https://${{ secrets.ARGO_CREDENTIALS_USR }}:${{ secrets.ARGO_CREDENTIALS_PSW }}@github.com/${{ secrets.ARGO_CREDENTIALS_USR }}/argo-k8s-python.git
+          git config --global user.email 'tino.hutinski@gmail.com'
+          cd argo-k8s-python
+          git checkout $branch
+          cd k8s-apps-deployment/python-test/
+          kustomize edit set image ${{ env.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+          git commit -am "Publish image ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
+          git push
+        fi
