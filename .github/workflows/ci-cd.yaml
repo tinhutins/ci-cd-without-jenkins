@@ -39,8 +39,9 @@ jobs:
             echo "Python image already exists, skipping new build and push"
           else
           # Perform additional steps if the image does not exist
-            echo "python_output=true" >> $GITHUB_OUTPUT            
+            echo "python_output=true" >> $GITHUB_OUTPUT         
           fi
+          cat $GITHUB_OUTPUT
     outputs:
       python_output: ${{ steps.python-step.outputs.python_output }}      
 
@@ -61,6 +62,15 @@ jobs:
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+
+      - 
+        name: Check where am i 
+        id: check-position
+        run: |
+
+          # Check if the image exists
+          pwd
+          ls -laht
       -
         name: Build and push python
         uses: docker/build-push-action@v4
