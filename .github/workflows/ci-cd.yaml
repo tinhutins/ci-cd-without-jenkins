@@ -60,6 +60,7 @@ jobs:
             docker push ${{ env.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
           fi
 
+
   deploy_k8s:
     runs-on: ubuntu-latest
     needs: test_image
