@@ -30,12 +30,12 @@ jobs:
         uses: docker/setup-buildx-action@v2
       
       - 
-        name: Check Docker Image for ${{ IMAGE_NAME }} and push it if doesn't exists
+        name: Check Docker Image for ${{ env.IMAGE_NAME }} and push it if doesn't exists
         id: python-step
         run: |
 
           # Check if the image exists
-          if docker pull  ${{ REPOSITORY_PATH }}/${{ IMAGE_NAME }}:${{ TAG }}; then
+          if docker pull  ${{ env.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}; then
             echo "Python image already exists, skipping new build and push"
           else
           # Perform additional steps if the image does not exist
@@ -67,7 +67,7 @@ jobs:
           file: Dockerfile
           push: true
           #tags: ${{ steps.meta.outputs.tags }}
-          tags: ${{ IMAGE_NAME }}:${{ TAG }}
+          tags: ${{ env.IMAGE_NAME }}:${{ env.TAG }}
     outputs:
       result: ${{ job.status }}
 
