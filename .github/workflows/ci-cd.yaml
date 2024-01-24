@@ -44,7 +44,20 @@ jobs:
             echo "python_output=true" >> $GITHUB_OUTPUT         
           fi
     outputs:
-      python_output: ${{ steps.python-step.outputs.python_output }}      
+      python_output: ${{ steps.python-step.outputs.python_output }}
+      result: ${{ job.outcome }}
+      result2: ${{ job.status }}   
+  
+  check_output:
+    needs: check-image
+    runs-on: ubuntu-latest
+    steps:
+      - 
+        name: check outputs
+        run: |
+          cat ${{ needs.check-image.outputs.python_output}}
+          cat ${{ needs.check-image.outputs.result}}
+          cat ${{ needs.check-image.outputs.result2}}
 
   build_image:
     needs: check-image
