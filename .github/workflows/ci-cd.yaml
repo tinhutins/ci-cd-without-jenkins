@@ -92,7 +92,7 @@ jobs:
       - 
         name: Deploy to Kubernetes
         run: |
-            apt update && apt-get install -y git && apt-get install -y kustomize
+            apt update && apt-get install -y kustomize
 
             if [ "${{ matrix.deploy_env }}" == "test" ]; then
               branch="${{ env.ARGO_TEST_BRANCH }}"
@@ -104,6 +104,7 @@ jobs:
 
             echo "Deploying to $environment..."
             git clone https://${{ secrets.ARGO_CREDENTIALS_USR }}:${{ secrets.ARGO_CREDENTIALS_PSW }}@github.com/${{ secrets.ARGO_CREDENTIALS_USR }}/argo-k8s-python.git
+            git config --global user.name "tinhutins"
             git config --global user.email 'tino.hutinski@gmail.com'
             cd argo-k8s-python
             git checkout $branch
