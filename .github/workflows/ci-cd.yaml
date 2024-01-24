@@ -81,7 +81,7 @@ jobs:
   deploy_k8s:
     runs-on: ubuntu-latest
     needs: [check-image, build_image]
-    if: ${{ needs.check-image.outputs.python_output == 'true' || needs.check-image.outputs.python_output != 'true' }}
+    if: ${{ needs.check-image.outputs.python_output == 'true' || needs.check-image.outputs.python_output != 'true'  || needs.build_image.outcome == 'skipped' }}
     strategy:
       matrix:
         deploy_env: ['test', 'prod']
