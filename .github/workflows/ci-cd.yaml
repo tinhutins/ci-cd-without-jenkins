@@ -70,8 +70,7 @@ jobs:
           # Check if the image exists
           pwd
           ls -laht
-          cd ../../
-          ls -laht
+          find . -iname "Docker"
       -
         name: Build and push python
         uses: docker/build-push-action@v4
