@@ -56,8 +56,8 @@ jobs:
         run: |
           if grep -q true "check_image_creation.txt"; then
             echo "Deploying the docker image to Harbor..."
-            docker login -u ${{ secrets.HARBOR_CREDENTIALS_USR }} -p ${{ secrets.HARBOR_CREDENTIALS_PSW }} ${{ env.REGISTRY_PATH }}
-            docker push ${{ env.REGISTRY_PATH }}/${{ env.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+            docker login -u ${{ secrets.HARBOR_CREDENTIALS_USR }} -p ${{ secrets.HARBOR_CREDENTIALS_PSW }}
+            docker push ${{ env.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
           fi
 
   deploy_k8s:
