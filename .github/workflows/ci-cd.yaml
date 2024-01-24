@@ -70,7 +70,7 @@ jobs:
           # Check if the image exists
           pwd
           ls -laht
-          cd ..
+          cd ../../
           ls -laht
       -
         name: Build and push python
