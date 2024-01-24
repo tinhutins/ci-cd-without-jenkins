@@ -71,8 +71,7 @@ jobs:
 
           pwd
           ls -laht
-          apt-get install -y tree 
-          tree
+          cat /etc/*release*
       -
         name: Build and push python
         uses: docker/build-push-action@v5
