@@ -82,6 +82,7 @@ jobs:
   deploy_k8s:
     runs-on: ubuntu-latest
     needs: [check-image, build_image]
+    # https://stackoverflow.com/questions/69354003/github-action-job-fire-when-previous-job-skipped
     if: ${{ always() && !failure() && !cancelled() }}
     strategy:
       matrix:
@@ -111,8 +112,8 @@ jobs:
             cd k8s-apps-deployment/python-test/
             kustomize edit set image ${{ env.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
             git commit -am "Publish image ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
-            git push
             git_status=$(git status)
             if grep -q "nothing to commit, working tree clean" "$git_status"; then
             echo "Working tree is clean. No changes to commit."
             exit 0
+            git push
