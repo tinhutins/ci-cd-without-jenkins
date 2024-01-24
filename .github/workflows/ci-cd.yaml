@@ -14,7 +14,7 @@ env:
 
 jobs:
   check-image:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       -
         name: Checkout
@@ -45,7 +45,6 @@ jobs:
           fi
     outputs:
       python_output: ${{ steps.python-step.outputs.python_output }}
-      result: ${{ job.status }}
   
   build_image:
     needs: check-image
