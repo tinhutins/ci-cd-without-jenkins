@@ -111,5 +111,5 @@ jobs:
             git checkout $branch
             cd k8s-apps-deployment/python-test/
             kustomize edit set image ${{ env.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
-            git commit -am "Publish image ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
+            git commit -am "Publish image ${{ env.IMAGE_NAME }}:${{ env.TAG }}" || true
             (git push) || true
