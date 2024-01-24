@@ -111,7 +111,7 @@ jobs:
             kustomize edit set image ${{ env.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
             git commit -am "Publish image ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
             git push
-            git_status=$(git status --porcelain)
-            if [[ -z "$git_status" || "$git_status" == "nothing to commit, working tree clean" ]]; then
+            git_status=$(git status)
+            if grep -q "nothing to commit, working tree clean" "$git_status"; then
             echo "Working tree is clean. No changes to commit."
             exit 0
