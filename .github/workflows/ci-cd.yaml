@@ -41,6 +41,8 @@ jobs:
           # Perform additional steps if the image does not exist
             echo "python_output=true" >> $GITHUB_OUTPUT            
           fi
+    outputs:
+      python_output: ${{ steps.python-step.outputs.python_output }}      
 
   build_image:
     needs: check-image
