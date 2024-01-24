@@ -41,7 +41,6 @@ jobs:
           # Perform additional steps if the image does not exist
             echo "python_output=true" >> $GITHUB_OUTPUT         
           fi
-          cat $GITHUB_OUTPUT
     outputs:
       python_output: ${{ steps.python-step.outputs.python_output }}      
 
@@ -70,6 +69,8 @@ jobs:
 
           # Check if the image exists
           pwd
+          ls -laht
+          cd ..
           ls -laht
       -
         name: Build and push python
