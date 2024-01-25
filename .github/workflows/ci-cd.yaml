@@ -8,7 +8,7 @@ on:
 env:
   REPOSITORY_PATH: 'hutinskit'
   IMAGE_NAME: 'python-test-app'
-  TAG: '1.0.141'
+  TAG: '1.0.142'
   ARGO_TEST_BRANCH: 'tino-test'
   ARGO_PROD_BRANCH: 'tino-prod'
 
@@ -81,34 +81,37 @@ jobs:
   deploy_k8s:
     runs-on: ubuntu-latest
     needs: [check-image, build_image]
-    # https://stackoverflow.com/questions/69354003/github-action-job-fire-when-previous-job-skipped
-    if: ${{ always() && !failure() && !cancelled() }}
+    if: ${{ always() && !failure() && !cancelled() && matrix.deploy_env == 'prod' }}
     strategy:
       matrix:
         deploy_env: ['test', 'prod']
+
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v3
-      - 
-        name: Deploy to Kubernetes
+
+      - name: Deploy to Kubernetes (Test/Prod)
         run: |
+          branch="${{ matrix.deploy_env == 'test' ? env.ARGO_TEST_BRANCH : env.ARGO_PROD_BRANCH }}"
+          environment="${{ matrix.deploy_env == 'test' ? 'test Kubernetes' : 'production Kubernetes' }}"
 
-            if [ "${{ matrix.deploy_env }}" == "test" ]; then
-              branch="${{ env.ARGO_TEST_BRANCH }}"
-              environment="test Kubernetes"
-            elif [ "${{ matrix.deploy_env }}" == "prod" ]; then
-              branch="${{ env.ARGO_PROD_BRANCH }}"
-              environment="production Kubernetes"
-            fi
+          echo "Deploying to $environment..."
+          git clone https://${{ secrets.ARGO_CREDENTIALS_USR }}:${{ secrets.ARGO_CREDENTIALS_PSW }}@github.com/${{ secrets.ARGO_CREDENTIALS_USR }}/argo-k8s-python.git
+          git config --global user.name "tinhutins"
+          git config --global user.email 'tino.hutinski@gmail.com'
+          cd argo-k8s-python
+          git checkout $branch
+          cd k8s-apps-deployment/python-test/
+          kustomize edit set image ${{ env.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+          git commit -am "Publish image ${{ env.IMAGE_NAME }}:${{ env.TAG }}" || true
+          (git push) || true
 
-            echo "Deploying to $environment..."
-            git clone https://${{ secrets.ARGO_CREDENTIALS_USR }}:${{ secrets.ARGO_CREDENTIALS_PSW }}@github.com/${{ secrets.ARGO_CREDENTIALS_USR }}/argo-k8s-python.git
-            git config --global user.name "tinhutins"
-            git config --global user.email 'tino.hutinski@gmail.com'
-            cd argo-k8s-python
-            git checkout $branch
-            cd k8s-apps-deployment/python-test/
-            kustomize edit set image ${{ env.REPOSITORY_PATH }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
-            git commit -am "Publish image ${{ env.IMAGE_NAME }}:${{ env.TAG }}" || true
-            (git push) || true
+  # Manual approval step for prod
+  manual-approval:
+    runs-on: ubuntu-latest
+    needs: [deploy_k8s]
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && matrix.deploy_env == 'prod'
+
+    steps:
+      - name: Request Manual Approval
+        run: echo "Please manually approve the deployment on GitHub UI."
