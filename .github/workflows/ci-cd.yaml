@@ -8,7 +8,7 @@ on:
 env:
   REPOSITORY_PATH: 'hutinskit'
   IMAGE_NAME: 'python-test-app'
-  TAG: '1.0.145'
+  TAG: '1.0.146'
   ARGO_TEST_BRANCH: 'tino-test'
   ARGO_PROD_BRANCH: 'tino-prod'
 
@@ -117,7 +117,7 @@ jobs:
           secret: ${{ secrets.ARGO_CREDENTIALS_PSW }}
           approvers: tinhutins
           minimum-approvals: 1
-          issue-title: "Deploying ${{ env.IMAGE_NAME }}:${{ env.TAG }} to prod if everything is okay in test env"
+          issue-title: "Deploying ${{ env.IMAGE_NAME }}:${{ env.TAG }} to prod from test"
           issue-body: "Please approve or deny the deployment of version ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
           exclude-workflow-initiator-as-approver: false
           additional-approved-words: ''
