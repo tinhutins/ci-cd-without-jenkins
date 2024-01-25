@@ -8,7 +8,7 @@ on:
 env:
   REPOSITORY_PATH: 'hutinskit'
   IMAGE_NAME: 'python-test-app'
-  TAG: '1.0.144'
+  TAG: '1.0.145'
   ARGO_TEST_BRANCH: 'tino-test'
   ARGO_PROD_BRANCH: 'tino-prod'
 
@@ -18,7 +18,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -53,7 +53,7 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -83,10 +83,11 @@ jobs:
     needs: [check-image, build_image]
     if: ${{ always() && !failure() && !cancelled() }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Deploy to Kubernetes (Test)
+      - 
+        name: Checkout
+        uses: actions/checkout@v4
+      - 
+        name: Deploy to Kubernetes (Test)
         run: |
           branch="${{ env.ARGO_TEST_BRANCH }}"
           environment="test Kubernetes"
@@ -107,20 +108,22 @@ jobs:
     needs: [check-image, build_image]
     if: ${{ always() && !failure() && !cancelled() }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - uses: trstringer/manual-approval@v1
+      - 
+        name: Checkout
+        uses: actions/checkout@v4
+      - 
+        uses: trstringer/manual-approval@v1
         with:
           secret: ${{ secrets.ARGO_CREDENTIALS_PSW }}
           approvers: tinhutins
           minimum-approvals: 1
-          issue-title: "Deploying ${{ env.IMAGE_NAME }}:${{ env.TAG }} to prod from test"
+          issue-title: "Deploying ${{ env.IMAGE_NAME }}:${{ env.TAG }} to prod if everything is okay in test env"
           issue-body: "Please approve or deny the deployment of version ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
           exclude-workflow-initiator-as-approver: false
           additional-approved-words: ''
           additional-denied-words: ''
-
-      - name: Deploy to Kubernetes (Prod)
+      - 
+        name: Deploy to Kubernetes (Prod)
         run: |
           branch="${{ env.ARGO_PROD_BRANCH }}"
           environment="production Kubernetes"
